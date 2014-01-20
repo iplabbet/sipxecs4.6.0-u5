@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+  <bean id="mongoDbFactory" class="org.sipfoundry.commons.mongo.MongoSpringFactory">
+    <property name="configFile" value="${sysdir.etc}/mongo-client.ini" />
+  </bean>  
+
+  <bean id="mongoTunnnel" class="org.sipfoundry.sipxconfig.mongo.MongoTunnelProvider" />
+  
+  <bean id="mongoManager" class="org.springframework.aop.framework.ProxyFactoryBean" parent="abstractDao">
+    <property name="target" ref="mongoManagerImpl"/>
+    <property name="proxyInterfaces" value="org.sipfoundry.sipxconfig.mongo.MongoManager"/>
+  </bean>
+
+  <bean id="mongoManagerImpl" class="org.sipfoundry.sipxconfig.mongo.MongoManagerImpl">
+    <property name="settingsDao">
+      <bean parent="beanWithSettingsDao">
+        <property name="target">
+          <bean parent="beanWithSettingsDaoImpl">
+            <constructor-arg value="org.sipfoundry.sipxconfig.mongo.MongoSettings"/>
+          </bean>
+        </property>
+      </bean>
+    </property>
+  </bean>
+  
+  <bean id="mongoConfig" class="org.sipfoundry.sipxconfig.mongo.MongoConfig">
+    <property name="mongoManager" ref="mongoManager"/>
+    <property name="mongoReplicaSetManager" ref="mongoReplicaSetManager"/>
+  </bean>
+
+  <bean id="mongoSettings" class="org.sipfoundry.sipxconfig.mongo.MongoSettings" parent="settingsBean">
+  </bean>
+
+  <!-- Use separate mongo factor to protect against disconnetion when -->
+  <bean id="mongoLocalDbFactory" class="org.sipfoundry.commons.mongo.MongoSpringFactory">
+    <property name="connectionUrl" value="mongodb://localhost:27017"/>
+  </bean>  
+
+  <bean id="localDb" class="org.sipfoundry.commons.mongo.MongoSpringTemplate">
+    <constructor-arg ref="mongoLocalDbFactory"/>
+    <!--  NOTE: same db used in unit tests to keep that in mind -->
+    <property name="dbname" value="local"/> 
+  </bean>
+
+  <bean id="localReplicaSetDb" class="org.sipfoundry.commons.mongo.MongoSpringTemplate">
+    <constructor-arg ref="mongoDbFactory"/>
+    <!--  NOTE: same db used in unit tests to keep that in mind -->
+    <property name="dbname" value="local"/> 
+  </bean>
+  
+  <bean id="mongoReplicaSetManager" class="org.sipfoundry.sipxconfig.mongo.MongoReplicaSetManager" init-method="checkState">
+    <property name="localDb" ref="localDb"/>
+    <property name="localReplicaSetDb" ref="localReplicaSetDb"/>
+    <property name="replicationManager" ref="replicationManager"/>
+    <property name="configManager" ref="configManager" />
+  </bean>
+
+  <bean id="mongoAlarms" class="org.springframework.context.support.ResourceBundleMessageSource">
+    <property name="basename">
+      <value>org.sipfoundry.sipxconfig.mongo.mongo</value>
+    </property>
+  </bean>
+  
+</beans>

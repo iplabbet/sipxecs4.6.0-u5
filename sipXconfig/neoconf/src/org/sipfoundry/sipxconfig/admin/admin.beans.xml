@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+  <bean id="adminContext" class="org.springframework.aop.framework.ProxyFactoryBean" parent="abstractDao">
+    <property name="proxyInterfaces" value="org.sipfoundry.sipxconfig.admin.AdminContext"/>
+    <property name="target" ref="adminContextImpl" />
+  </bean>
+
+  <bean id="adminContextImpl" class="org.sipfoundry.sipxconfig.admin.AdminContextImpl" autowire="byType">
+    <property name="settingsDao">
+      <bean parent="beanWithSettingsDao">
+        <property name="target">
+          <bean parent="beanWithSettingsDaoImpl">
+            <constructor-arg value="org.sipfoundry.sipxconfig.admin.AdminSettings"/>
+          </bean>
+        </property>
+      </bean>
+    </property>
+    <property name="sessionFactory" ref="sessionFactory"/>
+    <property name="locationsManager" ref="locationsManager"/>
+  </bean>
+  
+  <bean id="passwordPolicyImpl" class="org.sipfoundry.sipxconfig.admin.PasswordPolicyImpl">
+  </bean>
+  <bean id="adminSettings" class="org.sipfoundry.sipxconfig.admin.AdminSettings" parent="settingsBean">
+  	<property name="passwordPolicy" ref="passwordPolicyImpl"/>
+  </bean>
+
+  <bean id="adminConfig" class="org.sipfoundry.sipxconfig.admin.AdminConfig">
+    <property name="adminContext" ref="adminContext"/>
+  </bean>
+</beans>

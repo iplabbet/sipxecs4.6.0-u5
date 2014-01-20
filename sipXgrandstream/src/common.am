@@ -1,0 +1,11 @@
+grandstream_PKGS = \
+	log4j \
+	commons-logging \
+	commons-lang \
+	commons-io \
+	commons-collections \
+	commons-codec \
+	org.springframework.beans \
+	sipxcommons \
+	sipxconfig-neoconf \
+	velocity

@@ -1,0 +1,106 @@
+#!BuildIgnore: post-build-checks
+Name: @PACKAGE@
+Version: @VERSION@
+Release: @PACKAGE_REVISION@
+
+# do not build a debuginfo package
+%define debug_package %{nil}
+
+Summary: sipXecs Enterprise Communications Server 
+License: L-GPL
+Group: Telecommunications
+Vendor: SIPfoundry
+Packager: SIPfoundry <sipx-dev@sipfoundry.org>
+Url: http://www.sipfoundry.org
+
+BuildRequires: automake
+
+%define sipxconfiglib %{_datadir}/java/sipXecs/sipXconfig
+
+Requires: sipxacd >= %version
+Requires: sipxrelay >= %version
+Requires: sipxbridge >= %version
+Requires: sipxconfig >= %version
+Requires: sipxconfig-ftp >= %version
+Requires: sipxconfig-mrtg >= %version
+Requires: sipxconfig-tftp >= %version
+Requires: sipxconfig-tunnel >= %version
+Requires: sipxfreeswitch >= %version
+Requires: freeswitch >= 1.0.7
+Requires: freeswitch-codec-passthru-amr 
+Requires: freeswitch-codec-passthru-g723_1 
+Requires: freeswitch-codec-passthru-g729 
+Requires: sipximbot >= %version
+Requires: sipxivr >= %version
+Requires: sipxopenfire >= %version
+Requires: sipxpage >= %version
+Requires: sipxpark >= %version
+Requires: sipxpresence >= %version
+Requires: sipxproxy >= %version
+Requires: sipxpublisher >= %version
+Requires: sipxrecording >= %version
+Requires: sipxregistry >= %version
+Requires: sipxrls >= %version
+Requires: sipxsaa >= %version
+Requires: sipxsupervisor >= %version
+Requires: sipxtools >= %version
+Requires: sipxrest >= %version
+Requires: sipxcallcontroller >= %version
+Requires: sipxcdrlog >= %version
+Requires: sipxprovision >= %version
+Requires: sipxacccode >= %version
+Requires: sipxacdstatistics >= %version
+Requires: sipxcdr >= %version
+
+# require each plugin for now that existed before because someone might have
+# preconfigured phones and sipxconfig ui throws exception if implementation
+# is not there
+Requires: sipxaudiocodes >= %version
+Requires: sipxcisco >= %version
+Requires: sipxclearone >= %version
+# counter path required because jetty config references cmcprov war. nice if it was made dynamic
+Requires: sipxcounterpath >= %version
+Requires: sipxgrandstream >= %version
+Requires: sipxgtek >= %version
+Requires: sipxhitachi >= %version
+Requires: sipxipdialog >= %version
+Requires: sipxisphone >= %version
+Requires: sipxkarel >= %version
+Requires: sipxlg-nortel >= %version
+Requires: sipxmitel >= %version
+Requires: sipxnortel >= %version
+Requires: sipxpolycom >= %version
+Requires: sipxsnom >= %version
+Requires: sipxunidata >= %version
+
+Obsoletes: %{name}-doc
+Source: %name-%version.tar.gz
+
+Prefix: %_prefix
+BuildRoot: %{_tmppath}/%name-%version-root
+
+%description
+sipXecs is an IP PBX with integrated voice mail, ACD, multiple auto attendents, and web-based system configuration and management tool.
+
+%prep
+%setup -q
+# suse and obs build system
+mv %{_builddir}/%name-%version/%name-rpmlintrc %{_sourcedir}
+
+%build
+%configure @SIPX_RPM_CONFIGURE_OPTIONS@
+make
+
+%install
+rm -rf $RPM_BUILD_ROOT
+make DESTDIR=$RPM_BUILD_ROOT install
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+
+%files
+%defattr(644,root,root,755)
+
+%post
+
+%preun

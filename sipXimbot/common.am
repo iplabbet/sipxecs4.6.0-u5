@@ -1,0 +1,16 @@
+imbot_PKGS = \
+	sipxcommons \
+	mongo \
+	log4j \
+	smackx \
+	commons-io \
+	commons-codec \
+	commons-httpclient \
+	commons-lang \
+	commons-logging \
+	jetty \
+	javax.servlet \
+	mongo \
+	xmlrpc-client \
+	sipx-openfire-presence-plugin \
+	ws-commons-util

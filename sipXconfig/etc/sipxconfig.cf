@@ -1,0 +1,87 @@
+# Copyright (c) 2012 eZuce, Inc. All rights reserved.
+# Contributed to SIPfoundry under a Contributor Agreement
+
+# This software is free software; you can redistribute it and/or modify it under
+# the terms of the Affero General Public License (AGPL) as published by the
+# Free Software Foundation; either version 3 of the License, or (at your option)
+# any later version.
+
+# This software is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+# details.
+
+#
+# sipxconfig configuration and process management
+#
+bundle agent sipxconfig {
+  methods:
+    primary::
+      "any" usebundle => "sipxconfig_running";
+    primary.apache::
+      "any" usebundle => "sipxconfig_apache";
+    sipxlogwatcher::
+      "any" usebundle => "sipxconfig_logwatcher";
+    any::
+      "any" usebundle => "sipxconfig_services";
+}
+
+bundle agent sipxconfig_logwatcher {
+  files:
+    "$(sipx.SIPX_CONFDIR)/sipxlogwatcher.d/sipxconfig.sec"
+      comment => "sipxconfig log watcher",
+      create => "true",
+      perms => m(644),
+      transformer => "$(sipx.SIPX_LIBEXECDIR)/sipxlogwatcher-maker --in $(sipx.SIPX_CFDATA)/$(sipx.location_id)/alarms.yaml --template $(sipx.SIPX_CONFDIR)/sipxconfig/sipxconfig.sec.erb --out $(this.promiser)",
+      classes => if_repaired("reload_sipxlogwatcher");
+      
+}
+
+bundle agent sipxconfig_running {
+  vars:
+    any::
+      "service_command" string => ".*\s-Dprocname=sipxconfig\s.*";
+
+  methods:
+    any::
+      "any" usebundle => find_sipxservice_by_command_regex("$(service_command)","sipxconfig_running");
+    !src.primary::
+      "any" usebundle => rh_chkconfig_status("sipxconfig on");
+    !src.!primary::
+      "any" usebundle => rh_chkconfig_status("sipxconfig off");
+
+  commands:
+    primary.!sipxconfig_running.!stop_sipxecs::
+      "$(sipx.SIPX_SERVICEDIR)/sipxconfig"
+        comment => "start sipxconfig",
+        args => "start";
+
+    primary.sipxconfig_running.(restart_sipxconfig|restart_sipxecs|java_authorities_repaired)::
+      "$(sipx.SIPX_SERVICEDIR)/sipxconfig"
+        comment => "restart sipxconfig",
+        args => "restart";
+
+    (!primary|stop_sipxecs).sipxconfig_running::
+      "$(sipx.SIPX_SERVICEDIR)/sipxconfig"
+        comment => "stop sipxconfig",
+        args => "stop";
+}
+
+bundle agent sipxconfig_apache {
+  files:
+    "$(sipx.APACHE2_CONFDIR)/sipxconfig.conf"
+      create => "true",
+      comment => "apache config for admin ui and service phone profiles",
+      edit_defaults => empty,
+      edit_line => expand_template("$(sipx.SIPX_CONFDIR)/sipxconfig/sipxconfig-apache.conf"),
+      classes => if_repaired("restart_apache");
+}
+
+bundle agent sipxconfig_services {
+  files:
+    "$(sipx.SIPX_CONFDIR)/sipxecs-services.ini"
+      comment => "list of sipxecs services",
+      create => "true",
+      perms => m("644"),
+      copy_from => copy_from_cfdata("$(sipx.location_id)/sipxecs-services.ini");
+}

@@ -1,0 +1,75 @@
+# Initial Version Copyright (C) 2010 eZuce, Inc., All Rights Reserved.
+# Licensed to the User under the LGPL license.
+# 
+BUILDDIR = $(abspath @builddir@)
+SRC = $(abspath @srcdir@)
+
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_REVISION = $(shell $(SRC)/config/revision-gen @PACKAGE_VERSION@)
+
+help-var.DISTRO=To run a command for a different target distro. Default: $(DISTRO). Complete list of available values: @ALL_DISTROS@
+DISTRO=@DISTRO@
+
+DISTRO_OS = $(word 1,$(subst -, ,$(DISTRO)))
+DISTRO_VER = $(word 2,$(subst -, ,$(DISTRO)))
+DISTRO_ARCH = $(word 3,$(subst -, ,$(DISTRO)))
+DISTRO_RESULTS_DIR = $(strip \
+        $(subst fedora,Fedora, \
+        $(subst centos,CentOS,$(DISTRO_OS)))_$(DISTRO_VER))
+
+# utility
+empty :=
+space := $(empty) $(empty)
+lowercase = $(shell echo $(1) | tr '[:upper:]' '[:lower:]')
+
+# for each sipx-% target, define a variable for the corresponding project directory
+PROJ = $(filter $(all),$(subst ., ,$@))
+proj = $(call lowercase,$(PROJ))
+PROJ_REVISION = $(shell cd $(SRC)/$(PROJ) && ./config/revision-gen @PACKAGE_VERSION@)
+
+default-first-target : help;
+
+sipx.% :
+	$(MAKE) $(foreach P,$(sipx),$(P).$*)
+
+lib.% :
+	$(MAKE) $(foreach P,$(lib),$(P).$*)
+
+app.% :
+	$(MAKE) $(foreach P,$(app),$(P).$*)
+
+help.{sipx,lib}.list=list all sipx components
+app.list lib.list sipx.list : %.list :
+	@echo $($*)
+
+include $(sort $(wildcard mak/*.mk))
+
+help-values.{1} = Any sipXecs package. For all sipXecs packages use 'sipx'. Complete list of sipXecs packages : $(sipx)
+help-values.{2} = Any dependency package. For all dependencies use 'lib'.  Complete list of dependencies : $(lib)
+help-values.{6} = Any sipXecs application. For all app use 'app'.  Complete list of app : $(app)
+
+.PHONY: help
+help:
+	@echo -e "\nCOMMON TARGETS\n==================="
+	@$(MAKE) --no-print-directory -s help.print
+	@echo -e "\nALLOWED VALUES\n==================="
+	@$(MAKE) --no-print-directory -s help-values.print
+	@echo -e "\nSPECIAL VARIABLES\n==================="
+	@$(MAKE) --no-print-directory -s help-var.print
+
+help-values.print help.print help-var.print: %.print :
+	@$(foreach H,$(filter $*.%,$(sort $(.VARIABLES))), \
+	  echo "$$format_help" | Label="$(H:$*.%=%)" Text="$($(H))" bash;)
+
+define format_help
+MARGIN=18
+WIDTH=`tput cols`
+HELP_WIDTH=`echo $$[$${WIDTH} - $${MARGIN}]`
+export TEXT=`echo "$${Text}" | fold -s -w $${HELP_WIDTH} | sed -e "2,10s|^|                  |g"`
+export LABEL="$${Label}"
+echo | awk '{printf("%-15s - %s\n", ENVIRON["LABEL"], ENVIRON["TEXT"]);}'
+endef
+export format_help
+
+
+

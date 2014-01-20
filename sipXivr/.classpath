@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="test"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/sipxcommons"/>
+	<classpathentry kind="var" path="SIPX_BUILDDIR/sipXopenfire/presence-plugin/lib/sipx-openfire-presence-plugin.jar" sourcepath="SIPX_SRCDIR/sipXopenfire"/>
+	<classpathentry kind="output" path="bin.eclipse"/>
+</classpath>

@@ -1,0 +1,14 @@
+polycom_PKGS = \
+	log4j \
+	dom4j \
+	commons-lang \
+	commons-io \
+	commons-collections \
+	commons-logging \
+	org.springframework.beans \
+	org.springframework.core \
+	sipxcommons \
+	sipxconfig-neoconf \
+	velocity \
+	org.restlet \
+	org.restlet.ext.spring
